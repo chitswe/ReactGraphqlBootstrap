@@ -37,8 +37,9 @@ import cookieParser from 'cookie-parser';
 injectTapEventPlugin();
 import {default as AdminHtml} from './server/adminHtml';
 import {default as SiteHtml} from './server/siteHtml';
-import   './server/security/auth';
+//import   './server/security/auth';
 import passport from 'passport';
+import {loginHandler} from './server/security/login';
 import proxy from 'proxy-middleware';
 import url from "url";
 const env = process.env.NODE_ENV;
@@ -70,7 +71,6 @@ const proxyPort = 3230;
 const graphqlUrl=`http://localhost:${port}/graphql`;
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded());
-app.use(passport.initialize());
 app.use(cookieParser());
 app.disable('x-powered-by');
 if(env==="development"){
@@ -104,7 +104,7 @@ if(env==="development"){
     });
 }
 
-app.use('/graphql',passport.authenticate('bearer-graphql',{session:false}), apolloExpress( (req,res) => {
+app.use('/graphql', apolloExpress( (req,res) => {
     return {
         schema: makeExecutableSchema({
             typeDefs: Schema,
@@ -122,7 +122,16 @@ if(env !=="production" ){
     }));
 }
 
-
+appRouter.get('/employee',(req,res)=>{
+    db.Employee.findAll().then(data=>{
+        res.json(
+            data
+        );
+    }).catch(error=>{
+        console.log(error);
+        res.status(500).send(error.toString());
+    })
+});
 app.use(Express.static('public'));
 app.use('/api',appRouter);
 function renderHtml(req,res,renderProps,isAdminSite){
@@ -180,6 +189,47 @@ function renderHtml(req,res,renderProps,isAdminSite){
 }
 
 
+
+
+
+app.use('/admin',(req, res) => {
+    req.headers.authorization =  `Bearer ${req.cookies.access_token}`;
+    match({ routes, location: req.originalUrl }, (error, redirectLocation, renderProps) => {
+        if (redirectLocation) {
+            res.redirect(redirectLocation.pathname + redirectLocation.search);
+        } else if (error) {
+            console.error('ADMIN ROUTER ERROR:', error); // eslint-disable-line no-console
+            res.status(500);
+        } else if (renderProps) {
+            renderHtml(req,res,renderProps,true);
+        } else {//admin routes not match
+            res.status(404).send('Not found');
+        }
+    });
+});
+
+app.get('/Login',(req,res)=>{
+    match({ routes:siteRoutes, location: req.originalUrl }, (error, redirectLocation, renderProps) => {
+        renderHtml(req,res,renderProps,false);
+    });
+});
+
+app.use((req, res) => {
+    if(!req.originalUrl.startsWith('/graphql')){
+        match({routes:siteRoutes,location:req.originalUrl},(error,redirectLocation,renderProps)=>{
+                   if(redirectLocation)
+                       res.redirect(redirectLocation.pathname + redirectLocation.search);
+                   else if(error) {
+                       console.error('SITE ROUTER ERROR:', error);
+                       res.status(500);
+                   }else if(renderProps){
+                       renderHtml(req,res,renderProps,false);//render site
+                   }else{
+                       res.status(404).send('Not found');
+                   }
+                });
+    }
+});
 
 
 function bundleWebpack(){

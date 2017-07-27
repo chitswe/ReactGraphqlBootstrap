@@ -4,7 +4,6 @@
 import React,{PropTypes} from 'react';
 import {Link} from 'react-router';
 import SiteSnackbar from './components/SiteSnackbar';
-import NavDrawer from './NavDrawer';
 import {compose} from 'react-apollo';
 import {connect} from 'react-redux';
 class Layout extends React.Component{

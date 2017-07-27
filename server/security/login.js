@@ -1,7 +1,6 @@
 import db from '../models/index';
 import uuid from 'node-uuid';
 import jwt from 'jwt-simple';
-import cloudinary from '../cloudinary';
 let LocalStrategy = require('passport-local').Strategy;
 
 function login(username,password,remember){
@@ -46,7 +45,7 @@ function login(username,password,remember){
 									user_id:userAccount.id,
 									user_name:username,
 									account_type:type,
-									profile_pic:Photo?cloudinary.url(Photo):`/img/letter/letter_${FullName[0].toLowerCase()}.png`,
+									//profile_pic:Photo?cloudinary.url(Photo):`/img/letter/letter_${FullName[0].toLowerCase()}.png`,
 									full_name:FullName,
 									entity_id:EntityId
 								};
