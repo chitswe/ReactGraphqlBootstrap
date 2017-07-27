@@ -1,1 +1,1 @@
-# Shopkeeper
+# Project template react,graphql,sequelize
